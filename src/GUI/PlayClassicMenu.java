@@ -1,40 +1,51 @@
 package GUI;
 
-import Model.IGameSetUp;
-import Model.IGameState;
+import Data.QuestType;
+import Model.Quest;
+import ViewModel.GameViewModel;
+import ViewModel.QuestViewModel;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Slider;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
-import javafx.scene.control.Button;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 public class PlayClassicMenu {
 
-    private static Random random = new Random();
+    private final Scene scene;
+    private final GameViewModel gameViewModel;
 
-    public static Scene init(Stage primaryStage, Scene[] scenes, IGameState gameState){
+    private ScrollPane eventLog;
+    private Text eventLogContents;
+    private Slider siegeDaysAndNightsTracker;
+
+    private ImageView map;
+    private String eventLogText;
+
+    private int barrier = 0;
+
+    public PlayClassicMenu(Stage primaryStage, Scene[] scenes, GameViewModel gameViewModelIn){
+        gameViewModel=gameViewModelIn;
+        eventLogText=gameViewModel.getEventLogContents(0);
 
         GridPane layout = new GridPane();
         layout.setGridLinesVisible(true);
         layout.getColumnConstraints().addAll(new ColumnConstraints(1000),new ColumnConstraints(240));
         layout.getRowConstraints().addAll(new RowConstraints(50),new RowConstraints(800));
 
-        Slider siegeDaysAndNightsTracker = getSiegeDaysAndNightsTracker(gameState);
+        siegeDaysAndNightsTracker = getSiegeDaysAndNightsTracker();
 
         Pane map = getMap();
 
         HBox optionsMenu = getOptionsMenu(primaryStage, scenes);
 
-        VBox eventLogBox = getEventLogBox(map,siegeDaysAndNightsTracker,gameState);
+        VBox eventLogBox = getEventLogBox(map);
 
         layout.add(siegeDaysAndNightsTracker,0,0);
         layout.add(optionsMenu,1,0);
@@ -43,12 +54,15 @@ public class PlayClassicMenu {
 
         VBox root = new VBox(5);
         root.getChildren().add(layout);
-        Scene scene = new Scene(root,1240,850);
+        scene = new Scene(root,1240,850);
+    }
+
+    public Scene getScene(){
         return scene;
     }
 
-    private static Slider getSiegeDaysAndNightsTracker(IGameState gameState) {
-        Slider siegeDaysAndNightsTracker = new Slider(0,7,0);
+    private Slider getSiegeDaysAndNightsTracker() {
+        Slider siegeDaysAndNightsTracker = new Slider(0,gameViewModel.getNumberOfDays(),0);
         siegeDaysAndNightsTracker.setShowTickLabels(true);
         siegeDaysAndNightsTracker.setShowTickMarks(true);
         siegeDaysAndNightsTracker.setMajorTickUnit(1);
@@ -57,7 +71,7 @@ public class PlayClassicMenu {
         return siegeDaysAndNightsTracker;
     }
 
-    private static HBox getOptionsMenu(Stage primaryStage, Scene[] scenes) {
+    private HBox getOptionsMenu(Stage primaryStage, Scene[] scenes) {
         HBox topRightMenu = new HBox(5);
         topRightMenu.setAlignment(Pos.CENTER);
         Button saveButton = new Button("Save game");
@@ -84,12 +98,14 @@ public class PlayClassicMenu {
         return topRightMenu;
     }
 
-    private static Pane getMap() {
-        Image mapImage = new Image("Assets/Nuln_city.png");  //ALLOW IT TO BE DIFFERENT NOT PREASSIGNED
-        ImageView map =new ImageView();
+    private Pane getMap() {
+        Image mapImage = new Image(gameViewModel.getMapURL());  //ALLOW IT TO BE DIFFERENT NOT PREASSIGNED
+        map =new ImageView();
         map.setFitHeight(800);
         map.setFitWidth(1000);
         map.setImage(mapImage);
+
+//        System.out.println("mapX: "+map.getFitWidth()+" Y: "+map.getFitHeight());
 
         Pane mapPane = new Pane();
         mapPane.getChildren().add(map);
@@ -101,7 +117,7 @@ public class PlayClassicMenu {
         return mapPane;
     }
 
-    private static ArrayList<Button> createQuests(int numberOfQuests,double maxWidth,double maxHeight){
+    private ArrayList<Button> createQuests(int numberOfQuests,double maxWidth,double maxHeight){
         ArrayList<Button> quests = new ArrayList<>();
 
         Image markerImage = new Image("Assets/marker_icon.png");
@@ -118,20 +134,35 @@ public class PlayClassicMenu {
                                  "    -fx-background-radius: 0;\n" +
                                  "    -fx-background-color: transparent;");
 
+            int finalI = i;
+            questButton.setOnAction(e->{
+                if(gameViewModel.getQuestView().size()==0){
+                    eventLog.setContent(getQuestMenu(new QuestViewModel(new Quest(100,"Test Holder"," ", QuestType.PEACE,true,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0))));
+                } else {
+                    QuestViewModel quest = gameViewModel.getQuestView().get(finalI);
+                    eventLog.setContent(getQuestMenu(quest));
+                }
+            });
+
             quests.add(questButton);
         }
         moveQuestButtons(quests,maxWidth,maxHeight);
         return quests;
     }
 
-    private static void moveQuestButtons(ArrayList<Button> quests,double maxWidth,double maxHeight){
-        for (Button quest : quests) {
-            quest.setLayoutY(random.nextDouble() * (maxWidth - 128) + 64 - 20);
-            quest.setLayoutX(random.nextDouble() * (maxHeight - 128) + 64 - 20);
+    private void moveQuestButtons(ArrayList<Button> questButtons,double maxWidth,double maxHeight){
+
+        ArrayList<Point2D> coordinates = gameViewModel.getCoordinates(maxWidth,maxHeight);          //?????????????????
+
+        for (int i=0;i<questButtons.size();i++) {
+            questButtons.get(i).setLayoutY(coordinates.get(i).getY());
+            questButtons.get(i).setLayoutX(coordinates.get(i).getX());
+
+//            System.out.println("X: "+questButtons.get(i).getLayoutX()+" Y: "+questButtons.get(i).getLayoutY());
         }
     }
 
-    private static VBox getEventLogBox(Pane mapPane,Slider slider,IGameState gameState) {
+    private VBox getEventLogBox(Pane mapPane) {
         VBox eventLogBox = new VBox(0);
 
         VBox scalesBox = new VBox(5);
@@ -139,19 +170,19 @@ public class PlayClassicMenu {
         Image moraleImage = new Image("Assets/morale_icon.png");
         Image supplyImage = new Image("Assets/supply_icon.png");
 
-        HBox moraleBox = createScale(gameState.getMoraleValue(),moraleImage);
-        HBox supplyBox = createScale(gameState.getSupplyValue(),supplyImage);
+        HBox moraleBox = createScale(gameViewModel.getMoraleValue(),moraleImage);
+        HBox supplyBox = createScale(gameViewModel.getSupplyValue(),supplyImage);
 
         scalesBox.getChildren().addAll(moraleBox,supplyBox);
 
-        Text eventLogContents = new Text("This is a placeholder for contents of the Event Log.");
+        eventLogContents = new Text(eventLogText);
         eventLogContents.setWrappingWidth(240);
 
-        ScrollPane eventLog = new ScrollPane();
+        eventLog = new ScrollPane();
         eventLog.setPrefHeight(700);
         eventLog.setContent(eventLogContents);
         eventLog.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        eventLog.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+        eventLog.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
         HBox buttonBox = new HBox();
         Button nextTurnButton = new Button("Next Turn");
@@ -164,49 +195,127 @@ public class PlayClassicMenu {
 //        double mapWidth = map.getFitWidth();
 //        double mapHeight = map.getFitHeight();
 
+//        nextTurnButton.setDisable(true);
         nextTurnButton.setOnAction(e->{
+            gameViewModel.nextTurn(gameViewModel.getDifficulty());
+            ArrayList<Button> newQuestSet;
+            barrier=0;
 
-            if (slider.getValue()==0){
-                ArrayList<Button> newQuestSet = createQuests(5,800,1000);
+            ArrayList<Button> buttons = new ArrayList<>();
+
+
+            if (siegeDaysAndNightsTracker.getValue()==0){
+                newQuestSet = createQuests(gameViewModel.getNumberOfQuestsPerDay(),map.getFitWidth(),map.getFitHeight());
                 mapPane.getChildren().addAll(newQuestSet);
-            }else{
-                ArrayList<Button> buttons= new ArrayList<>();
+            }
+            else if(siegeDaysAndNightsTracker.getValue()+1==gameViewModel.getNumberOfDays() || gameViewModel.getMoraleValue()<0 || gameViewModel.getSupplyValue()<=0){
+                newQuestSet = createQuests(1,map.getFitWidth(),map.getFitHeight());
+                mapPane.getChildren().addAll(newQuestSet);
+//                buttons= new ArrayList<>();
+//                var children = mapPane.getChildren();
+//                int count=0;
+//
+//                for(int i=0; i<children.size(); i++){
+//                    var b = children.get(i);
+//                    if (b instanceof Button && count<=gameViewModel.getNumberOfQuestsPerDay()-1){
+//                        b.setVisible(false);
+////                        buttons.add((Button) b);
+//                        mapPane.getChildren().remove(b);
+//                        count++;
+//                    } else if (b instanceof Button && count==5){
+//                        buttons.add((Button) b);
+//                    }
+//
+//                }
+            }
+            else {
+                buttons= new ArrayList<>();
                 var children = mapPane.getChildren();
-                for(int i=0; i<children.size(); i++){
-                    var b = children.get(i);
-                    if (b instanceof Button){
+                for (javafx.scene.Node b : children) {
+                    if (b instanceof Button) {
+//                        ((Button)b).setVisible(false);
                         buttons.add((Button) b);
                     }
                 }
-                moveQuestButtons(buttons,800,1000);
+
             }
-
-            slider.setValue(slider.getValue()+1);
-
+            moveQuestButtons(buttons,map.getFitWidth(),map.getFitHeight());
+            siegeDaysAndNightsTracker.setValue(siegeDaysAndNightsTracker.getValue()+1);
+            eventLogContents.setText(gameViewModel.getEventLogContents((int) siegeDaysAndNightsTracker.getValue()));
         });
 
-//        nextTurnButton.setOnMouseMoved(e->{
-//            ArrayList<Button> newQuestSet = createQuests(5,800,1000);
-//            mapPane.getChildren().addAll(newQuestSet);
+//        nextTurnButton.setOnAction(e->{
+//            eventLog.setContent(getQuestMenu());
 //        });
 
         eventLogBox.getChildren().addAll(scalesBox,eventLog,buttonBox);
         return eventLogBox;
     }
 
-    private static HBox createScale(double initialValue, Image image){
+    private GridPane getQuestMenu(QuestViewModel quest){
+        GridPane questInfoBox = new GridPane();
+        questInfoBox.getRowConstraints().addAll(new RowConstraints(470),new RowConstraints(200));
+
+        VBox text = new VBox();
+        text.setAlignment(Pos.TOP_LEFT);
+        Text questText = new Text("Quest name: "+quest.getName()+"\nQuest description: "+quest.getDescription());
+//        Text questText = new Text("Bruh");
+        questText.setWrappingWidth(225);
+        text.getChildren().add(questText);
+
+
+        VBox modifierAndSubmitBox=new VBox(5);
+        modifierAndSubmitBox.setAlignment(Pos.BOTTOM_CENTER);
+
+        ComboBox<Integer> modifierComboBox = new ComboBox<>();
+        modifierComboBox.getItems().addAll(-10,0,+10,+20,+30);
+        modifierComboBox.setValue(0);
+
+
+        Button submitButton = new Button("Submit");
+        submitButton.setPrefWidth(240);
+        submitButton.setPrefHeight(50);
+
+        Button backButton = new Button("Back");
+        backButton.setPrefWidth(240);
+        backButton.setPrefHeight(20);
+
+        modifierAndSubmitBox.getChildren().addAll(modifierComboBox,submitButton,backButton);
+        questInfoBox.add(text,0,0);
+        questInfoBox.add(modifierAndSubmitBox,0,1);
+
+        backButton.setOnAction(e->{
+            eventLog.setContent(eventLogContents);
+        });
+
+        if(barrier< gameViewModel.getQuestSelectCountPerDay()){
+            submitButton.setOnAction(e->{
+//            System.out.println(modifierComboBox.getValue());
+                gameViewModel.completeQuest(quest);
+                barrier++;
+                submitButton.setDisable(true);
+                eventLogContents.setText(gameViewModel.getEventLogContents((int) siegeDaysAndNightsTracker.getValue()));
+            });
+        } else {
+            submitButton.setDisable(true);
+        }
+
+        return questInfoBox;
+    }
+
+    private HBox createScale(double initialValue, Image image){
         HBox scaleBox = new HBox(5);
         scaleBox.setAlignment(Pos.CENTER);
 
         ImageView imageView = new ImageView(image);
 
         ProgressBar scale = new ProgressBar();
-        scale.setProgress(initialValue);
+        scale.setProgress(initialValue/100.0);                      //?????
 
         Text scaleValue = new Text(scale.getProgress()*100+"%");
 
 
-        System.out.println(scale.getProgress());                     // TO DELETE
+//        System.out.println(scale.getProgress());                     // TO DELETE
 
         scaleBox.getChildren().addAll(imageView,scale,scaleValue);
         return scaleBox;

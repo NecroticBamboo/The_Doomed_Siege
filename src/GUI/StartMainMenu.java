@@ -6,6 +6,7 @@ import Data.Database;
 import Data.IDatabase;
 import Data.utils.DatabaseConnection;
 import Model.*;
+import ViewModel.GameViewModel;
 import javafx.application.Application;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -16,7 +17,6 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 
 public class StartMainMenu extends Application {
@@ -42,22 +42,6 @@ public class StartMainMenu extends Application {
         ServiceLocator serviceLocator = new ServiceLocator();
         serviceLocator.setService("IDatabaseManager",new DatabaseConnection());
         serviceLocator.setService("IDatabase",new Database(serviceLocator));
-
-//        Database database = new Database(serviceLocator);
-//        Quest quest = database.getQuestById(1);
-//        System.out.println(quest.getQuestId());
-//        System.out.println(quest.getQuestName());
-//        System.out.println(quest.getQuestDescription());
-//        System.out.println(quest.getQuestType());
-//        System.out.println(quest.isUsed());
-//        System.out.println(quest.getMoraleBadResult());
-//        System.out.println(quest.getSupplyBadResult());
-//        System.out.println(quest.getMoraleNormalResult());
-//        System.out.println(quest.getSupplyNormalResult());
-//        System.out.println(quest.getMoraleGoodResult());
-//        System.out.println(quest.getSupplyGoodResult());
-//        System.out.println(quest.getMoraleDefaultResult());
-//        System.out.println(quest.getSupplyDefaultResult());
 
         Scene[] scenes = new Scene[5];
 
@@ -124,9 +108,9 @@ public class StartMainMenu extends Application {
 
         playClassic.setOnAction(e->{
 
-            IGameState initialGameState = setUpClassicGame(serviceLocator);
-            var playClassicScene =  PlayClassicMenu.init(primaryStage,scenes,initialGameState); //CREATES SCENE TWO TIMES. NOT NEEDED
-            scenes[1]=playClassicScene;
+            var viewModel = setUpClassicGame(serviceLocator);
+            var playClassicScene =  new PlayClassicMenu(primaryStage,scenes,viewModel); //CREATES SCENE TWO TIMES. NOT NEEDED
+            scenes[1]=playClassicScene.getScene();
 
             primaryStage.setResizable(false);
 //            primaryStage.setMaxWidth(1780);
@@ -157,7 +141,7 @@ public class StartMainMenu extends Application {
         return scene;
     }
 
-    private static IGameState setUpClassicGame(IServiceLocator serviceLocator){
+    private static GameViewModel setUpClassicGame(IServiceLocator serviceLocator){
         try {
             return setUpClassicGameUnsafe( serviceLocator );
         } catch (SQLException throwables) {
@@ -166,13 +150,14 @@ public class StartMainMenu extends Application {
         return null;
     }
 
-    private static IGameState setUpClassicGameUnsafe(IServiceLocator serviceLocator) throws SQLException {
+    private static GameViewModel setUpClassicGameUnsafe(IServiceLocator serviceLocator) throws SQLException {
         IDatabase database = serviceLocator.getService("IDatabase");
         IGameSetUp setUp = database.getGameById(1);
 
         IGameController gameController = new GameController(serviceLocator,setUp);
-        IGameState gameState =gameController.getInitialState();
-        return gameState;
+        GameViewModel gameViewModel = new GameViewModel(gameController);
+
+        return gameViewModel;
     }
 
 

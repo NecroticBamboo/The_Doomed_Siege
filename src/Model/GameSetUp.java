@@ -1,9 +1,7 @@
 package Model;
 
-import Data.utils.ConnectionInfo;
-import javafx.util.Pair;
+import Data.QuestType;
 
-import java.sql.*;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -19,10 +17,19 @@ public class GameSetUp implements IGameSetUp{
     private final double initialMorale;
     private final double initialSupply;
 
-    private final Map<Integer,ArrayList<QuestIdentifier>> availableQuests;
+    private final Map<QuestType,ArrayList<QuestIdentifier>> availableQuests;
 
 
-    public GameSetUp(int gameId, String gameName, String mapUrl, double difficulty, int numberOfDays, int numberOfQuestsPerDay, int questSelectCountPerDay, double initialMorale, double initialSupply, Map<Integer,ArrayList<QuestIdentifier>> availableQuests) {
+    public GameSetUp(int gameId,
+                     String gameName,
+                     String mapUrl,
+                     double difficulty,
+                     int numberOfDays,
+                     int numberOfQuestsPerDay,
+                     int questSelectCountPerDay,
+                     double initialMorale,
+                     double initialSupply,
+                     Map<QuestType,ArrayList<QuestIdentifier>> availableQuests) {
         this.gameId = gameId;
         this.gameName = gameName;
         this.mapUrl = mapUrl;
@@ -67,7 +74,7 @@ public class GameSetUp implements IGameSetUp{
     }
 
     @Override
-    public Map<Integer,ArrayList<QuestIdentifier>> getAvailableQuests(){
+    public Map<QuestType,ArrayList<QuestIdentifier>> getAvailableQuests(){
         return availableQuests;
     }
 

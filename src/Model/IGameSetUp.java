@@ -1,5 +1,7 @@
 package Model;
 
+import Data.QuestType;
+
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -16,7 +18,7 @@ public interface IGameSetUp {
     int getNumberOfQuestsPerDay();
     int getQuestSelectCountPerDay();
 
-    Map<Integer,ArrayList<QuestIdentifier>> getAvailableQuests();
+    Map<QuestType,ArrayList<QuestIdentifier>> getAvailableQuests();
 
     double getInitialMorale();
     double getInitialSupply();

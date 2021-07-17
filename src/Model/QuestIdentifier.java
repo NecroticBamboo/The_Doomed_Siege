@@ -1,12 +1,14 @@
 package Model;
 
+import Data.QuestType;
+
 public class QuestIdentifier{
 
     private final int questId;
     private final String questName;
-    private final int questType;
+    private final QuestType questType;
 
-    public QuestIdentifier(int questIdIn,String questNameIn, int questTypeIn){
+    public QuestIdentifier(int questIdIn,String questNameIn, QuestType questTypeIn){
         questId=questIdIn;
         questName=questNameIn;
         questType=questTypeIn;
@@ -20,7 +22,7 @@ public class QuestIdentifier{
         return questName;
     }
 
-    public int getQuestType() {
+    public QuestType getQuestType() {
         return questType;
     }
 }

@@ -10,28 +10,28 @@ public class Quest implements IQuest{
     private QuestType questType;
     private boolean isUsed;
 
-    private final int moraleBadResult;
-    private final int supplyBadResult;
-    private final int moraleNormalResult;
-    private final int supplyNormalResult;
-    private final int moraleGoodResult;
-    private final int supplyGoodResult;
-    private final int moraleDefaultResult;
-    private final int supplyDefaultResult;
+    private final double moraleBadResult;
+    private final double supplyBadResult;
+    private final double moraleNormalResult;
+    private final double supplyNormalResult;
+    private final double moraleGoodResult;
+    private final double supplyGoodResult;
+    private final double moraleDefaultResult;
+    private final double supplyDefaultResult;
 
     public Quest(int questIdIn,
                  String questNameIn,
                  String questDescriptionIn,
                  QuestType questTypeIn,
                  boolean isUsedIn,
-                 int moraleBadResultIn,
-                 int supplyBadResultIn,
-                 int moraleNormalResultIn,
-                 int supplyNormalResultIn,
-                 int moraleGoodResultIn,
-                 int supplyGoodResultIn,
-                 int moraleDefaultResultIn,
-                 int supplyDefaultResultIn){
+                 double moraleBadResultIn,
+                 double supplyBadResultIn,
+                 double moraleNormalResultIn,
+                 double supplyNormalResultIn,
+                 double moraleGoodResultIn,
+                 double supplyGoodResultIn,
+                 double moraleDefaultResultIn,
+                 double supplyDefaultResultIn){
 
         questId=questIdIn;
         questName=questNameIn;
@@ -95,7 +95,7 @@ public class Quest implements IQuest{
     }
 
     @Override
-    public double getMoraleResult(QuestOutcome outcome) {
+    public double getMoraleResult(QuestOutcome outcome) { //???? returns int as doubles
 
         switch (outcome){
             case BAD:
@@ -110,7 +110,7 @@ public class Quest implements IQuest{
     }
 
     @Override
-    public double getSupplyResult(QuestOutcome outcome) {
+    public double getSupplyResult(QuestOutcome outcome) { //???? returns int as doubles
         switch (outcome){
             case BAD:
                 return supplyBadResult;

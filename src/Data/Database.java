@@ -40,14 +40,14 @@ public class Database implements IDatabase{
             QuestType questType = QuestType.fromInt(resultSet.getInt("QuestType")-1);
             boolean isUsed = resultSet.getBoolean("IsUsed");
 
-            int moraleBadResult=resultSet.getInt("MoraleBadResult");
-            int supplyBadResult=resultSet.getInt("SupplyBadResult");
-            int moraleNormalResult=resultSet.getInt("MoraleNormalResult");
-            int supplyNormalResult=resultSet.getInt("SupplyNormalResult");
-            int moraleGoodResult=resultSet.getInt("MoraleGoodResult");
-            int supplyGoodResult=resultSet.getInt("SupplyGoodResult");
-            int moraleDefaultResult=resultSet.getInt("MoraleDefaultResult");
-            int supplyDefaultResult=resultSet.getInt("SupplyDefaultResult");
+            double moraleBadResult=resultSet.getInt("MoraleBadResult")/100.0;
+            double supplyBadResult=resultSet.getInt("SupplyBadResult")/100.0;
+            double moraleNormalResult=resultSet.getInt("MoraleNormalResult")/100.0;
+            double supplyNormalResult=resultSet.getInt("SupplyNormalResult")/100.0;
+            double moraleGoodResult=resultSet.getInt("MoraleGoodResult")/100.0;
+            double supplyGoodResult=resultSet.getInt("SupplyGoodResult")/100.0;
+            double moraleDefaultResult=resultSet.getInt("MoraleDefaultResult")/100.0;
+            double supplyDefaultResult=resultSet.getInt("SupplyDefaultResult")/100.0;
 
             Quest quest = new Quest(questId,questName,questDescription,questType,isUsed,moraleBadResult,supplyBadResult,moraleNormalResult,supplyNormalResult,moraleGoodResult,supplyGoodResult,moraleDefaultResult,supplyDefaultResult);
 //            System.out.println(quest);
@@ -77,14 +77,14 @@ public class Database implements IDatabase{
             QuestType questType = QuestType.fromInt(resultSet.getInt("QuestType")-1);
             boolean isUsed = resultSet.getBoolean("IsUsed");
 
-            int moraleBadResult=resultSet.getInt("MoraleBadResult");
-            int supplyBadResult=resultSet.getInt("SupplyBadResult");
-            int moraleNormalResult=resultSet.getInt("MoraleNormalResult");
-            int supplyNormalResult=resultSet.getInt("SupplyNormalResult");
-            int moraleGoodResult=resultSet.getInt("MoraleGoodResult");
-            int supplyGoodResult=resultSet.getInt("SupplyGoodResult");
-            int moraleDefaultResult=resultSet.getInt("MoraleDefaultResult");
-            int supplyDefaultResult=resultSet.getInt("SupplyDefaultResult");
+            double moraleBadResult=resultSet.getInt("MoraleBadResult")/100.0;
+            double supplyBadResult=resultSet.getInt("SupplyBadResult")/100.0;
+            double moraleNormalResult=resultSet.getInt("MoraleNormalResult")/100.0;
+            double supplyNormalResult=resultSet.getInt("SupplyNormalResult")/100.0;
+            double moraleGoodResult=resultSet.getInt("MoraleGoodResult")/100.0;
+            double supplyGoodResult=resultSet.getInt("SupplyGoodResult")/100.0;
+            double moraleDefaultResult=resultSet.getInt("MoraleDefaultResult")/100.0;
+            double supplyDefaultResult=resultSet.getInt("SupplyDefaultResult")/100.0;
 
             Quest quest = new Quest(questId,questName,questDescription,questType,isUsed,moraleBadResult,supplyBadResult,moraleNormalResult,supplyNormalResult,moraleGoodResult,supplyGoodResult,moraleDefaultResult,supplyDefaultResult);
 //            System.out.println(quest);
@@ -117,14 +117,14 @@ public class Database implements IDatabase{
                 String questDescription = resultSet.getString("QuestDescription");
                 boolean isUsed = resultSet.getBoolean("IsUsed");
 
-                int moraleBadResult=resultSet.getInt("MoraleBadResult");
-                int supplyBadResult=resultSet.getInt("SupplyBadResult");
-                int moraleNormalResult=resultSet.getInt("MoraleNormalResult");
-                int supplyNormalResult=resultSet.getInt("SupplyNormalResult");
-                int moraleGoodResult=resultSet.getInt("MoraleGoodResult");
-                int supplyGoodResult=resultSet.getInt("SupplyGoodResult");
-                int moraleDefaultResult=resultSet.getInt("MoraleDefaultResult");
-                int supplyDefaultResult=resultSet.getInt("SupplyDefaultResult");
+                double moraleBadResult=resultSet.getInt("MoraleBadResult")/100.0;
+                double supplyBadResult=resultSet.getInt("SupplyBadResult")/100.0;
+                double moraleNormalResult=resultSet.getInt("MoraleNormalResult")/100.0;
+                double supplyNormalResult=resultSet.getInt("SupplyNormalResult")/100.0;
+                double moraleGoodResult=resultSet.getInt("MoraleGoodResult")/100.0;
+                double supplyGoodResult=resultSet.getInt("SupplyGoodResult")/100.0;
+                double moraleDefaultResult=resultSet.getInt("MoraleDefaultResult")/100.0;
+                double supplyDefaultResult=resultSet.getInt("SupplyDefaultResult")/100.0;
 
                 Quest quest = new Quest(questId,questName,questDescription,questType,isUsed,moraleBadResult,supplyBadResult,moraleNormalResult,supplyNormalResult,moraleGoodResult,supplyGoodResult,moraleDefaultResult,supplyDefaultResult);
                 questsList.add(quest);
@@ -157,20 +157,19 @@ public class Database implements IDatabase{
         int questSelectCountPerDay=resultSet.getInt("QuestSelectCountPerDay");
         double initialMorale=resultSet.getInt("InitialMorale")/100.0;
         double initialSupply=resultSet.getInt("initialSupply")/100.0;
-        Map<Integer,ArrayList<QuestIdentifier>> availableQuests = getAvailableQuests(gameId);
+        Map<QuestType,ArrayList<QuestIdentifier>> availableQuests = getAvailableQuests(gameId);
 
         GameSetUp gameSetUp=new GameSetUp(gameId,gameName,mapUrl,difficulty,numberOfDays,numberOfQuestsPerDay,questSelectCountPerDay,initialMorale,initialSupply,availableQuests);
         return gameSetUp;
     }
 
-    private Map<Integer,ArrayList<QuestIdentifier>> getAvailableQuests(int gameId) throws SQLException {
+    private Map<QuestType,ArrayList<QuestIdentifier>> getAvailableQuests(int gameId) throws SQLException {
         // select a.QuestId, b.Name from AvailableQuests a join Quests b on a.QuestId = b.QuestId
         ConnectionInfo ci = databaseManager.acquire();
 
-        Map<Integer,ArrayList<QuestIdentifier>> questMap = new HashMap<>();
-        questMap.put(1,new ArrayList<>());
-        questMap.put(2,new ArrayList<>());
-        questMap.put(3,new ArrayList<>());
+        Map<QuestType,ArrayList<QuestIdentifier>> questMap = new HashMap<>();
+        for( var t : QuestType.values() )
+            questMap.put(t,new ArrayList<>());
 
         Connection con = ci.getConnection();
         if (con == null) return null;
@@ -184,22 +183,10 @@ public class Database implements IDatabase{
         while (resultSet.next()){
             int questId = resultSet.getInt("QuestId");
             String questName = resultSet.getString("QuestName");
-            int questType= resultSet.getInt("QuestType");
+            QuestType questType= QuestType.fromInt(resultSet.getInt("QuestType")-1);
             QuestIdentifier questIdentifier = new QuestIdentifier(questId,questName,questType);
 
-            switch (questType){
-                case 1:
-                    questMap.get(1).add(questIdentifier);
-                    break;
-                case 2:
-                    questMap.get(2).add(questIdentifier);
-                    break;
-                case 3:
-                    questMap.get(3).add(questIdentifier);
-                    break;
-                default:
-                    break;
-            }
+            questMap.get(questType).add(questIdentifier);
         }
 
         return questMap;

@@ -76,15 +76,15 @@ public class GameController implements IGameController{
         //check for CRISIS events
         ArrayList<QuestInfo<Point2D>> quests;
 
-        if(prevStep.isSiegeBegun()){
-            quests = takeRandomQuests(gameSetUp.getNumberOfQuestsPerDay(),QuestType.SIEGE);
-        } else if(prevStep.getCurrentDay()+1 == gameSetUp.getNumberOfDays()){
+        if(prevStep.getCurrentDay()+1 == gameSetUp.getNumberOfDays()){
             quests = takeRandomQuests(1,QuestType.CRISIS_END);
         } else if(currentMorale<=0){
             quests = takeRandomQuests(1,QuestType.CRISIS_MORALE);
         } else if(currentSupply<=0){
             quests = takeRandomQuests(1,QuestType.CRISIS_SUPPLY);
-        } else {
+        } else if(prevStep.isSiegeBegun()){
+            quests = takeRandomQuests(gameSetUp.getNumberOfQuestsPerDay(),QuestType.SIEGE);
+        }  else {
             quests = takeRandomQuests(gameSetUp.getNumberOfQuestsPerDay(),QuestType.PEACE);
         }
 
@@ -94,11 +94,6 @@ public class GameController implements IGameController{
 //        }
 
         nextTurn = new GameState(prevStep.getCurrentDay()+1,currentMorale,currentSupply,quests);
-
-//        System.out.println("Morale: "+nextTurn.getMoraleValue());
-//        System.out.println("Supply: "+nextTurn.getSupplyValue());
-
-
         turns.add(nextTurn);
 
         return nextTurn;
@@ -202,6 +197,17 @@ public class GameController implements IGameController{
 
         var questCompletionInfoHolder=new QuestInfo<>(modifier,quest);
         completedQuests.add(questCompletionInfoHolder);
+    }
+
+    @Override
+    public boolean canCompleteAnotherQuest() {
+
+        if(getCurrentState() == getPreviousTurns().get(getPreviousTurns().size()-1)){
+            if(getCurrentState().getCompletedQuests().size()<gameSetUp.getQuestSelectCountPerDay()){
+                return true;
+            }
+        }
+        return false;
     }
 
 }

@@ -23,16 +23,21 @@ public class PlayClassicMenu {
 
     private ScrollPane eventLog;
     private Text eventLogContents;
+    private GridPane eventLogQuestContent;
     private Slider siegeDaysAndNightsTracker;
 
-    private ImageView map;
-    private String eventLogText;
+    private ArrayList<Button> buttons;
 
-    private int barrier = 0;
+    private Button nextTurnButton;
+    private Button submitButton;
+
+    private double maxWidth;
+    private double maxHeight;
+    private String eventLogText;
 
     public PlayClassicMenu(Stage primaryStage, Scene[] scenes, GameViewModel gameViewModelIn){
         gameViewModel=gameViewModelIn;
-        eventLogText=gameViewModel.getEventLogContents(0);
+        eventLogText=gameViewModel.getEventLogContents();
 
         GridPane layout = new GridPane();
         layout.setGridLinesVisible(true);
@@ -57,18 +62,49 @@ public class PlayClassicMenu {
         scene = new Scene(root,1240,850);
     }
 
+    private void updateUI(){
+
+        eventLogContents.setText(gameViewModel.getEventLogContents());
+
+        var canCompleteMore = gameViewModel.canCompleteAnotherQuest();
+        nextTurnButton.setDisable(canCompleteMore);
+        if(submitButton!=null){
+            submitButton.setDisable(!canCompleteMore || gameViewModel.wasQuestComplete(gameViewModel.getCurrentQuest()));
+        }
+
+        if(gameViewModel.getCurrentQuest()!=null){
+            eventLog.setContent(eventLogQuestContent);
+        } else {
+            eventLog.setContent(eventLogContents);
+        }
+
+        for (int i=0;i<buttons.size();i++){
+            assignQuest(buttons.get(i),i);
+        }
+
+        moveQuestButtons(buttons);
+    }
+
     public Scene getScene(){
         return scene;
     }
 
     private Slider getSiegeDaysAndNightsTracker() {
-        Slider siegeDaysAndNightsTracker = new Slider(0,gameViewModel.getNumberOfDays(),0);
-        siegeDaysAndNightsTracker.setShowTickLabels(true);
-        siegeDaysAndNightsTracker.setShowTickMarks(true);
-        siegeDaysAndNightsTracker.setMajorTickUnit(1);
-        siegeDaysAndNightsTracker.setMinorTickCount(0);
-        siegeDaysAndNightsTracker.setSnapToTicks(true);
-        return siegeDaysAndNightsTracker;
+        Slider tracker = new Slider(0,gameViewModel.getNumberOfDays(),0);
+        tracker.setShowTickLabels(true);
+        tracker.setShowTickMarks(true);
+        tracker.setMajorTickUnit(1);
+        tracker.setMinorTickCount(0);
+        tracker.setSnapToTicks(true);
+
+        tracker.setOnMouseReleased(e->{
+//            System.out.println("Tracker value: "+tracker.getValue());
+            gameViewModel.setTurn((int) tracker.getValue());
+            gameViewModel.setCurrentQuest(null);
+            updateUI();
+        });
+
+        return tracker;
     }
 
     private HBox getOptionsMenu(Stage primaryStage, Scene[] scenes) {
@@ -99,26 +135,23 @@ public class PlayClassicMenu {
     }
 
     private Pane getMap() {
-        Image mapImage = new Image(gameViewModel.getMapURL());  //ALLOW IT TO BE DIFFERENT NOT PREASSIGNED
-        map =new ImageView();
+        Image mapImage = new Image(gameViewModel.getMapURL());
+        ImageView map = new ImageView();
         map.setFitHeight(800);
         map.setFitWidth(1000);
         map.setImage(mapImage);
 
-//        System.out.println("mapX: "+map.getFitWidth()+" Y: "+map.getFitHeight());
+        maxWidth= map.getFitWidth();
+        maxHeight= map.getFitHeight();
 
         Pane mapPane = new Pane();
         mapPane.getChildren().add(map);
 
-//        quests.get(0).setOnAction(e->{
-//            System.out.println("Button 1 is pressed!");
-//        });
-
         return mapPane;
     }
 
-    private ArrayList<Button> createQuests(int numberOfQuests,double maxWidth,double maxHeight){
-        ArrayList<Button> quests = new ArrayList<>();
+    private ArrayList<Button> createQuests(int numberOfQuests){
+        buttons = new ArrayList<>();
 
         Image markerImage = new Image("Assets/marker_icon.png");
 
@@ -134,31 +167,42 @@ public class PlayClassicMenu {
                                  "    -fx-background-radius: 0;\n" +
                                  "    -fx-background-color: transparent;");
 
-            int finalI = i;
-            questButton.setOnAction(e->{
-                if(gameViewModel.getQuestView().size()==0){
-                    eventLog.setContent(getQuestMenu(new QuestViewModel(new Quest(100,"Test Holder"," ", QuestType.PEACE,true,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0))));
-                } else {
-                    QuestViewModel quest = gameViewModel.getQuestView().get(finalI);
-                    eventLog.setContent(getQuestMenu(quest));
-                }
-            });
+            assignQuest(questButton, i);
 
-            quests.add(questButton);
+            buttons.add(questButton);
         }
-        moveQuestButtons(quests,maxWidth,maxHeight);
-        return quests;
+        moveQuestButtons(buttons);
+
+        return buttons;
     }
 
-    private void moveQuestButtons(ArrayList<Button> questButtons,double maxWidth,double maxHeight){
+    private void assignQuest(Button questButton, int finalI) {
+        questButton.setOnAction(e->{
 
-        ArrayList<Point2D> coordinates = gameViewModel.getCoordinates(maxWidth,maxHeight);          //?????????????????
+            QuestViewModel quest;
+            if(gameViewModel.getQuestView().size()==0){
+                quest=new QuestViewModel(new Quest(100,"Test Holder"," ", QuestType.PEACE,true,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0));
+            } else {
+                quest = gameViewModel.getQuestView().get(finalI);
+            }
+            eventLogQuestContent=getQuestMenu(quest);
+            gameViewModel.setCurrentQuest(quest);
+            updateUI();
+        });
+    }
 
-        for (int i=0;i<questButtons.size();i++) {
+    private void moveQuestButtons(ArrayList<Button> questButtons){
+
+        ArrayList<Point2D> coordinates = gameViewModel.getCoordinates(maxWidth,maxHeight);
+
+        for (int i=0;i<coordinates.size();i++) {
             questButtons.get(i).setLayoutY(coordinates.get(i).getY());
             questButtons.get(i).setLayoutX(coordinates.get(i).getX());
+            questButtons.get(i).setVisible(true);
+        }
 
-//            System.out.println("X: "+questButtons.get(i).getLayoutX()+" Y: "+questButtons.get(i).getLayoutY());
+        for(int i=coordinates.size();i<questButtons.size();i++){
+            questButtons.get(i).setVisible(false);
         }
     }
 
@@ -185,68 +229,36 @@ public class PlayClassicMenu {
         eventLog.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
         HBox buttonBox = new HBox();
-        Button nextTurnButton = new Button("Next Turn");
+        nextTurnButton = new Button("Next Turn");
         nextTurnButton.setPrefWidth(240);
         nextTurnButton.setPrefHeight(70);
         buttonBox.getChildren().add(nextTurnButton);
 
-        // set maxWidth and maxHeight as map constrains
-//        ImageView map = (ImageView) mapPane.getChildren().get(0);
-//        double mapWidth = map.getFitWidth();
-//        double mapHeight = map.getFitHeight();
-
-//        nextTurnButton.setDisable(true);
         nextTurnButton.setOnAction(e->{
             gameViewModel.nextTurn(gameViewModel.getDifficulty());
             ArrayList<Button> newQuestSet;
-            barrier=0;
-
-            ArrayList<Button> buttons = new ArrayList<>();
-
 
             if (siegeDaysAndNightsTracker.getValue()==0){
-                newQuestSet = createQuests(gameViewModel.getNumberOfQuestsPerDay(),map.getFitWidth(),map.getFitHeight());
+                newQuestSet = createQuests(gameViewModel.getNumberOfQuestsPerDay());
                 mapPane.getChildren().addAll(newQuestSet);
             }
-            else if(siegeDaysAndNightsTracker.getValue()+1==gameViewModel.getNumberOfDays() || gameViewModel.getMoraleValue()<0 || gameViewModel.getSupplyValue()<=0){
-                newQuestSet = createQuests(1,map.getFitWidth(),map.getFitHeight());
-                mapPane.getChildren().addAll(newQuestSet);
-//                buttons= new ArrayList<>();
-//                var children = mapPane.getChildren();
-//                int count=0;
-//
-//                for(int i=0; i<children.size(); i++){
-//                    var b = children.get(i);
-//                    if (b instanceof Button && count<=gameViewModel.getNumberOfQuestsPerDay()-1){
-//                        b.setVisible(false);
-////                        buttons.add((Button) b);
-//                        mapPane.getChildren().remove(b);
-//                        count++;
-//                    } else if (b instanceof Button && count==5){
-//                        buttons.add((Button) b);
-//                    }
-//
-//                }
-            }
-            else {
-                buttons= new ArrayList<>();
-                var children = mapPane.getChildren();
-                for (javafx.scene.Node b : children) {
-                    if (b instanceof Button) {
-//                        ((Button)b).setVisible(false);
-                        buttons.add((Button) b);
-                    }
+
+            buttons= new ArrayList<>();
+            var children = mapPane.getChildren();
+            for (javafx.scene.Node b : children) {
+                if (b instanceof Button) {
+                    buttons.add((Button) b);
                 }
-
             }
-            moveQuestButtons(buttons,map.getFitWidth(),map.getFitHeight());
-            siegeDaysAndNightsTracker.setValue(siegeDaysAndNightsTracker.getValue()+1);
-            eventLogContents.setText(gameViewModel.getEventLogContents((int) siegeDaysAndNightsTracker.getValue()));
-        });
+            moveQuestButtons(buttons);
 
-//        nextTurnButton.setOnAction(e->{
-//            eventLog.setContent(getQuestMenu());
-//        });
+            siegeDaysAndNightsTracker.setValue(gameViewModel.getLastDay());
+            eventLogContents.setText(gameViewModel.getEventLogContents());
+
+            nextTurnButton.setDisable(true);
+
+            updateUI();
+        });
 
         eventLogBox.getChildren().addAll(scalesBox,eventLog,buttonBox);
         return eventLogBox;
@@ -259,7 +271,6 @@ public class PlayClassicMenu {
         VBox text = new VBox();
         text.setAlignment(Pos.TOP_LEFT);
         Text questText = new Text("Quest name: "+quest.getName()+"\nQuest description: "+quest.getDescription());
-//        Text questText = new Text("Bruh");
         questText.setWrappingWidth(225);
         text.getChildren().add(questText);
 
@@ -272,7 +283,7 @@ public class PlayClassicMenu {
         modifierComboBox.setValue(0);
 
 
-        Button submitButton = new Button("Submit");
+        submitButton = new Button("Submit");
         submitButton.setPrefWidth(240);
         submitButton.setPrefHeight(50);
 
@@ -280,24 +291,23 @@ public class PlayClassicMenu {
         backButton.setPrefWidth(240);
         backButton.setPrefHeight(20);
 
-        modifierAndSubmitBox.getChildren().addAll(modifierComboBox,submitButton,backButton);
+        modifierAndSubmitBox.getChildren().addAll(modifierComboBox,submitButton, backButton);
         questInfoBox.add(text,0,0);
         questInfoBox.add(modifierAndSubmitBox,0,1);
 
         backButton.setOnAction(e->{
-            eventLog.setContent(eventLogContents);
+//            eventLog.setContent(eventLogContents);
+            gameViewModel.setCurrentQuest(null);
+            updateUI();
         });
 
-        if(barrier< gameViewModel.getQuestSelectCountPerDay()){
+        if(gameViewModel.canCompleteAnotherQuest()){
             submitButton.setOnAction(e->{
-//            System.out.println(modifierComboBox.getValue());
                 gameViewModel.completeQuest(quest);
-                barrier++;
                 submitButton.setDisable(true);
-                eventLogContents.setText(gameViewModel.getEventLogContents((int) siegeDaysAndNightsTracker.getValue()));
+
+                updateUI();
             });
-        } else {
-            submitButton.setDisable(true);
         }
 
         return questInfoBox;
@@ -310,25 +320,12 @@ public class PlayClassicMenu {
         ImageView imageView = new ImageView(image);
 
         ProgressBar scale = new ProgressBar();
-        scale.setProgress(initialValue/100.0);                      //?????
+        scale.setProgress(initialValue/100.0);
 
         Text scaleValue = new Text(scale.getProgress()*100+"%");
-
-
-//        System.out.println(scale.getProgress());                     // TO DELETE
 
         scaleBox.getChildren().addAll(imageView,scale,scaleValue);
         return scaleBox;
     }
 
-//    private static double createStartValue(double initValue) {
-//        Random generator = new Random();
-//        double value = Math.round((generator.nextDouble()*(1-0.5) + initValue)*10)/10.0;
-//        if(value>1){
-//            return 1;
-//        } else if (value<0){
-//            return 0.5;
-//        }
-//        return value;
-//    }
 }

@@ -2,7 +2,6 @@ package ViewModel;
 
 import Model.IGameController;
 import Model.IGameState;
-import Model.QuestInfo;
 import javafx.geometry.Point2D;
 
 import java.util.ArrayList;
@@ -13,6 +12,7 @@ public class GameViewModel {
 
     private IGameState currentState;
     private ArrayList<QuestViewModel> questViewModel = new ArrayList<>();
+    private QuestViewModel currentQuest;
 
     public GameViewModel(IGameController gameControllerIn){
         gameController=gameControllerIn;
@@ -34,7 +34,11 @@ public class GameViewModel {
 
     //needed for the slider
     public void setTurn(int day){
+        if(day>=gameController.getPreviousTurns().size()){
+            day=gameController.getPreviousTurns().size()-1;
+        }
         currentState = gameController.getPreviousTurns().get(day);
+        updateQuestViewModel();
     }
 
     public String getMapURL(){
@@ -51,13 +55,22 @@ public class GameViewModel {
 
     public int getQuestSelectCountPerDay(){return gameController.getGameSetUp().getQuestSelectCountPerDay();}
 
+    public double getCurrentDay(){
+        return currentState.getCurrentDay();
+    }
 
-//    private int bruh =0;
+    public double getLastDay(){
+        return gameController.getPreviousTurns().get(gameController.getPreviousTurns().size()-1).getCurrentDay();
+    }
 
     //needed for next turn button
     public void nextTurn(double difficulty){
         currentState = gameController.nextTurn(difficulty);
 
+        updateQuestViewModel();
+    }
+
+    private void updateQuestViewModel() {
         questViewModel.clear();
         for(var item: currentState.getQuests()){
             questViewModel.add(new QuestViewModel(item.getQuest()));
@@ -79,14 +92,8 @@ public class GameViewModel {
         return res;
     }
 
-    public String getEventLogContents(int day){
-//        if(questCompletionInfoHolder==null){
-//            return currentState.getGameState();
-//        }
-//
-//        String res = currentState.getGameState()+questCompletionInfoHolder.getQuest().getQuestName()+" was completed.\n";
-//        return res;
-        return gameController.getPreviousTurns().get(day).getGameState();
+    public String getEventLogContents(){
+        return gameController.getPreviousTurns().get((int) currentState.getCurrentDay()).getGameState();
     }
 
     public void completeQuest(QuestViewModel questViewModel){
@@ -95,7 +102,42 @@ public class GameViewModel {
         gameController.completeQuest(quest,modifier);
     }
 
+    public boolean checkIfCompleted(QuestViewModel questViewModel){
+        for(int i=0;i<currentState.getCompletedQuests().size();i++){
+            if(questViewModel.getQuest() == currentState.getCompletedQuests().get(i).getQuest()){
+                return true;
+            }
+        }
+        return false;
+    }
+
     public ArrayList<QuestViewModel> getQuestView(){
         return questViewModel;
+    }
+
+    public QuestViewModel getCurrentQuest(){
+        return currentQuest;
+    }
+
+    public void setCurrentQuest(QuestViewModel quest){
+        currentQuest=quest;
+    }
+
+    public boolean canCompleteAnotherQuest(){
+        return gameController.canCompleteAnotherQuest();
+    }
+
+    public boolean wasQuestComplete(QuestViewModel quest){
+
+        if(quest==null){
+            return true;
+        }
+
+        for (var q: currentState.getCompletedQuests()){
+            if(q.getQuest()==quest.getQuest()){
+                return true;
+            }
+        }
+        return false;
     }
 }

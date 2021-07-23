@@ -32,6 +32,8 @@ public class QuestViewModel {
         }
     }
 
+
+
     public IQuest getQuest(){
         return quest;
     }

@@ -1,6 +1,5 @@
 package Model;
 
-import ViewModel.QuestViewModel;
 
 import java.util.ArrayList;
 
@@ -13,4 +12,6 @@ public interface IGameController {
     IGameSetUp getGameSetUp();
 
     void completeQuest(IQuest quest, double modifier);
+
+    boolean canCompleteAnotherQuest();
 }

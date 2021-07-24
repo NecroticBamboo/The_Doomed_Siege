@@ -96,6 +96,9 @@ public class GameController implements IGameController{
         nextTurn = new GameState(prevStep.getCurrentDay()+1,currentMorale,currentSupply,quests);
         turns.add(nextTurn);
 
+        IDatabase database = serviceLocator.getService("IDatabase");
+        database.saveGame(this,"wow");
+
         return nextTurn;
     }
 

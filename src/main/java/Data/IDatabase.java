@@ -1,5 +1,6 @@
 package Data;
 
+import Model.IGameController;
 import Model.IGameSetUp;
 import Model.IQuest;
 import javafx.util.Pair;
@@ -18,4 +19,9 @@ public interface IDatabase {
     ArrayList<IQuest> getQuestsByType(QuestType questType);
 
     IGameSetUp getGameById(int gameId) throws SQLException;
+
+    ArrayList<String> listSavedGames();
+    void saveGame(IGameController controller, String gameName);
+    IGameController loadSavedGame(String gameName);
+    void deleteSavedGame(String gameName);
 }

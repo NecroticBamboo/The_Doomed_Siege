@@ -4,7 +4,9 @@ import Data.DI.IServiceLocator;
 import Data.utils.ConnectionInfo;
 import Data.utils.IDatabaseManager;
 import Model.*;
-import javafx.util.Pair;
+import com.google.gson.Gson;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSerializer;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -161,6 +163,28 @@ public class Database implements IDatabase{
 
         GameSetUp gameSetUp=new GameSetUp(gameId,gameName,mapUrl,difficulty,numberOfDays,numberOfQuestsPerDay,questSelectCountPerDay,initialMorale,initialSupply,availableQuests);
         return gameSetUp;
+    }
+
+    @Override
+    public ArrayList<String> listSavedGames() {
+        return null;
+    }
+
+    @Override
+    public void saveGame(IGameController controller, String gameName) {
+        var gson = new Gson();
+        var json = gson.toJson(controller);
+
+    }
+
+    @Override
+    public IGameController loadSavedGame(String gameName) {
+        return null;
+    }
+
+    @Override
+    public void deleteSavedGame(String gameName) {
+
     }
 
     private Map<QuestType,ArrayList<QuestIdentifier>> getAvailableQuests(int gameId) throws SQLException {

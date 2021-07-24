@@ -34,6 +34,8 @@ public class PlayClassicMenu {
     private double maxWidth;
     private double maxHeight;
     private String eventLogText;
+    
+    private final String urlBasePath="file:C:\\Users\\andre\\IdeaProjects\\The_Doomed_Siege\\src\\main\\java\\";
 
     public PlayClassicMenu(Stage primaryStage, Scene[] scenes, GameViewModel gameViewModelIn){
         gameViewModel=gameViewModelIn;
@@ -67,7 +69,9 @@ public class PlayClassicMenu {
         eventLogContents.setText(gameViewModel.getEventLogContents());
 
         var canCompleteMore = gameViewModel.canCompleteAnotherQuest();
-        nextTurnButton.setDisable(canCompleteMore);
+        var isTurnZero = gameViewModel.getCurrentDay()==0 && gameViewModel.getLastDay()==0;
+        nextTurnButton.setDisable(canCompleteMore && !isTurnZero);
+
         if(submitButton!=null){
             submitButton.setDisable(!canCompleteMore || gameViewModel.wasQuestComplete(gameViewModel.getCurrentQuest()));
         }
@@ -78,11 +82,13 @@ public class PlayClassicMenu {
             eventLog.setContent(eventLogContents);
         }
 
-        for (int i=0;i<buttons.size();i++){
-            assignQuest(buttons.get(i),i);
+        if(buttons!=null){
+            for (int i=0;i<buttons.size();i++){
+                assignQuest(buttons.get(i),i);
+            }
+            moveQuestButtons(buttons);
         }
 
-        moveQuestButtons(buttons);
     }
 
     public Scene getScene(){
@@ -99,7 +105,12 @@ public class PlayClassicMenu {
 
         tracker.setOnMouseReleased(e->{
 //            System.out.println("Tracker value: "+tracker.getValue());
-            gameViewModel.setTurn((int) tracker.getValue());
+            int day = (int) tracker.getValue();
+            if(day>gameViewModel.getLastDay()){
+                tracker.setValue(gameViewModel.getLastDay());
+                day=(int) gameViewModel.getLastDay();
+            }
+            gameViewModel.setTurn(day);
             gameViewModel.setCurrentQuest(null);
             updateUI();
         });
@@ -113,12 +124,12 @@ public class PlayClassicMenu {
         Button saveButton = new Button("Save game");
         saveButton.setPrefHeight(40);
 
-        Image settingImage = new Image("Assets/cogs_icon.png");
+        Image settingImage = new Image(urlBasePath+"Assets/cogs_icon.png");
         ImageView settingsView = new ImageView(settingImage);
         Button settingButton = new Button();
         settingButton.setGraphic(settingsView);
 
-        Image exitImage = new Image("Assets/exit_icon.png");
+        Image exitImage = new Image(urlBasePath+"Assets/exit_icon.png");
         ImageView exitView = new ImageView(exitImage);
         Button exitButton = new Button();
         exitButton.setGraphic(exitView);
@@ -135,7 +146,7 @@ public class PlayClassicMenu {
     }
 
     private Pane getMap() {
-        Image mapImage = new Image(gameViewModel.getMapURL());
+        Image mapImage = new Image(urlBasePath+gameViewModel.getMapURL());
         ImageView map = new ImageView();
         map.setFitHeight(800);
         map.setFitWidth(1000);
@@ -153,7 +164,7 @@ public class PlayClassicMenu {
     private ArrayList<Button> createQuests(int numberOfQuests){
         buttons = new ArrayList<>();
 
-        Image markerImage = new Image("Assets/marker_icon.png");
+        Image markerImage = new Image(urlBasePath+"Assets/marker_icon.png");
 
         for(int i=0;i<numberOfQuests;i++){
             ImageView markerView = new ImageView(markerImage);
@@ -211,8 +222,8 @@ public class PlayClassicMenu {
 
         VBox scalesBox = new VBox(5);
 
-        Image moraleImage = new Image("Assets/morale_icon.png");
-        Image supplyImage = new Image("Assets/supply_icon.png");
+        Image moraleImage = new Image(urlBasePath+"Assets/morale_icon.png");
+        Image supplyImage = new Image(urlBasePath+"Assets/supply_icon.png");
 
         HBox moraleBox = createScale(gameViewModel.getMoraleValue(),moraleImage);
         HBox supplyBox = createScale(gameViewModel.getSupplyValue(),supplyImage);
